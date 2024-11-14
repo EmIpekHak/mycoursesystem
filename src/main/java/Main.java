@@ -1,4 +1,5 @@
 import dataaccess.MysqlDatabaseConnection;
+import ui.Cli;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -6,7 +7,8 @@ import java.sql.SQLException;
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Test");
+        Cli myCli = new Cli();
+        myCli.start();
 
         try {
             Connection myConnection = MysqlDatabaseConnection.getConnection("jdbc:mysql://localhost:3306/kurssystem", "root", "");
