@@ -2,15 +2,14 @@ package dataaccess;
 
 import domain.Course;
 import domain.CourseType;
+import domain.InvalidValueException;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class MySqlCourseRepository implements MyCourseRepository{
+public class MySqlCourseRepository implements MyCourseRepository {
 
     private Connection con;
 
@@ -33,8 +32,27 @@ public class MySqlCourseRepository implements MyCourseRepository{
         String sql = "SELECT * FROM `courses`";
         try {
             PreparedStatement preparedStatement = con.prepareStatement(sql);
-        } catch (SQLException e) {
-            throw new DatabaseException("Database error occured");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            ArrayList<Course> courseList = new ArrayList<>();
+            while (resultSet.next()) {
+
+                courseList.add(new Course(
+                                resultSet.getLong("id"),
+                                resultSet.getString("name"),
+                                resultSet.getString("description"),
+                                resultSet.getInt("hours"),
+                                resultSet.getDate("begin_date"),
+                                resultSet.getDate("end_date"),
+                                CourseType.valueOf(resultSet.getString("course_type"))
+                        )
+                );
+            }
+        }catch(InvalidValueException e)
+        {
+
+        }
+        catch (SQLException e) {
+                throw new DatabaseException("Database error occured");
         }
         return List.of();
     }

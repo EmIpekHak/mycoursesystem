@@ -28,6 +28,18 @@ public class Course extends BaseEntity {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Course{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", hours=" + hours +
+                ", beginDate=" + beginDate +
+                ", endDate=" + endDate +
+                ", courseType=" + courseType +
+                '}';
+    }
+
     public void setName(String name) {
         this.name = name;
     }
