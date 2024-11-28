@@ -59,7 +59,7 @@ public class Cli {
 
     private void showMenue() {
         System.out.println("-------Kursmanagement-------");
-        System.out.println("() Kurs eingeben \t (2) Alle Kurse anzeigen \t");
+        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t");
         System.out.println("(x) ENDE");
     }
     

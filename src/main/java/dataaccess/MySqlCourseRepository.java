@@ -3,6 +3,8 @@ package dataaccess;
 import domain.Course;
 import domain.CourseType;
 import domain.InvalidValueException;
+import util.Assert;
+
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ public class MySqlCourseRepository implements MyCourseRepository {
                         )
                 );
             }
+            return courseList;
         }catch(InvalidValueException e)
         {
 
@@ -84,9 +87,17 @@ public class MySqlCourseRepository implements MyCourseRepository {
 
     @Override
     public Optional<Course> getById(Long id) {
+        Assert.notNull(id);
         return Optional.empty();
     }
 
+    private int countCoursesInDbWithId(Long id){
+        String countSql = "Select count(*) FROM `courses` WHERE `id` =?";
+        PreparedStatement preparedStatement = con.prepareStatement(countSql);
+        preparedStatementCount.setLong(1, id);
+        ResultSet resultSetCount = preparedStatementCount.executeQuery();
+        resultSetCount.next();
+    }
     @Override
     public List<Course> getAll() {
         return List.of();
