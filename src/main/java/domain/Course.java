@@ -2,7 +2,7 @@ package domain;
 
 import java.sql.Date;
 
-public class Course extends BaseEntity {
+public class Course {
     private String name;
     private String description;
     private int hours;
@@ -10,8 +10,8 @@ public class Course extends BaseEntity {
     private Date endDate;
     private CourseType courseType;
 
-    public Course(Long id, String name, String description, int hours, Date beginDate, Date endDate, CourseType courseType) throws InvalidValueException {
-        super(null);
+    public Course(Long id,String name, String description, int hours, Date beginDate, Date endDate, CourseType courseType) throws InvalidValueException {
+        this.id = id;
         setName(name);
         setDescription(description);
         setHours(hours);
@@ -31,7 +31,6 @@ public class Course extends BaseEntity {
     @Override
     public String toString() {
         return "Course{" +
-                "id=" + getId() + '\'' +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", hours=" + hours +
@@ -40,6 +39,17 @@ public class Course extends BaseEntity {
                 ", courseType=" + courseType +
                 '}';
     }
+
+    private long id;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
 
     public void setName(String name) {
         this.name = name;
