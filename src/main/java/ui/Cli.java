@@ -5,6 +5,7 @@ import dataaccess.MyCourseRepository;
 import domain.Course;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class Cli {
@@ -27,6 +28,8 @@ public class Cli {
                     break;
                 case "2":
                     showAllCourses();
+                case "3":
+                    showCourseDetails();
                     break;
                 case "x":
                     System.out.println("Programm wird beendet");
@@ -39,11 +42,29 @@ public class Cli {
         scan.close();
     }
 
+    private void showCourseDetails() {
+    System.out.println("Für welchen Kurs möchten Sie die Kursdetails anzeigen?");
+    Long courseId = Long.parseLong(scan.nextLine());
+    try {
+        Optional<Course> courseOptional = repo.getById(courseId);
+        if (courseOptional.isPresent()) {
+            System.out.println(courseOptional.get());
+        } else {
+            System.out.println("Kurs mit der ID " + courseId + " wurde nicht gefunden");
+        }
+    }
+    catch(DatabaseException databaseException){
+    System.out.println("Datenbankfehler bei Kurs-Detailsanzeige: " + databaseException.getMessage());
+    }
+    catch (Exception exception){
+    System.out.println("Ein unbekannter Fehler ist aufgetreten: " + exception.getMessage());
+    }
+    }
+
     private void showAllCourses() {
         List<Course> list = null;
         try{
         list = repo.getAll();
-
         if (list.size()>0){
             for (Course course : list) {
                 System.out.println(course);
@@ -59,7 +80,7 @@ public class Cli {
 
     private void showMenue() {
         System.out.println("-------Kursmanagement-------");
-        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t");
+        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t" +" (3) Kursdetails anzeigen");
         System.out.println("(x) ENDE");
     }
     
