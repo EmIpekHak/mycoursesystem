@@ -1,7 +1,7 @@
 package domain;
 
-public class InvalidValueException extends Throwable {
+public class InvalidValueException extends RuntimeException {
     public InvalidValueException(String message) {
-    super(message);
-     }
+        super(message);
+    }
 }

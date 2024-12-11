@@ -2,7 +2,8 @@ package domain;
 
 import java.sql.Date;
 
-public class Course {
+public class Course extends BaseEntity{
+
     private String name;
     private String description;
     private int hours;
@@ -10,27 +11,123 @@ public class Course {
     private Date endDate;
     private CourseType courseType;
 
-    public Course(Long id,String name, String description, int hours, Date beginDate, Date endDate, CourseType courseType) throws InvalidValueException {
-        this.id = id;
-        setName(name);
-        setDescription(description);
-        setHours(hours);
-        setBeginDate(beginDate);
-        setEndDate(endDate);
-        setCourseType(courseType);
+    public Course(Long id, String name, CourseType courseType, String description, int hours, Date beginDate, Date endDate) throws InvalidValueException{
+        super(id);
+        this.setName(name);
+        this.setCourseType(courseType);
+        this.setDescription(description);
+        this.setHours(hours);
+        this.setBeginDate(beginDate);
+        this.setEndDate(endDate);
     }
 
-    public String getName() throws InvalidValueException {
-        if (name != null && name.length() > 1) {
-            return name;
-        } else {
-            throw new InvalidValueException("Kursname muss mindestens 2 Zeichen lang sein");
+    public Course(String name, CourseType courseType, String description, int hours, Date beginDate, Date endDate) throws InvalidValueException{
+        super(null);
+        this.setName(name);
+        this.setCourseType(courseType);
+        this.setDescription(description);
+        this.setHours(hours);
+        this.setBeginDate(beginDate);
+        this.setEndDate(endDate);
+    }
+
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) throws  InvalidValueException{
+        if(name != null && name.length() > 1) {
+            this.name = name;
+        }else{
+            throw new InvalidValueException("Kursanme muss minedstens 2 zeichen lang sein");
+
+        }
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) throws InvalidValueException{
+        if(description != null && description.length() > 10) {
+            this.description = description;
+        }else{
+            throw new InvalidValueException("Kursbeschreibung muss mindestens 10 zeichen lang sein");
+
+        }
+    }
+
+    public int getHours() {
+        return hours;
+    }
+
+    public void setHours(int hours) throws InvalidValueException{
+        if(hours > 0 && hours < 10) {
+            this.hours = hours;
+        }else{
+            throw new InvalidValueException("Anzahl der Kurssatunden pro Kurs darf nur zwischen 1 und 10 liegen!");
+
+        }
+        this.hours = hours;
+    }
+
+    public java.sql.Date getBeginDate() {
+        return beginDate;
+    }
+
+    public void setBeginDate(Date beginDate) throws InvalidValueException{
+        if(beginDate != null){
+            if(endDate!=null) {
+                if (beginDate.before(endDate)) {
+                    this.beginDate = beginDate;
+                } else {
+                    throw new InvalidValueException("Beginn des Kurses muss vor dem Ende liegen");
+                }
+            }else{
+                this.beginDate = beginDate;
+            }
+        }else {
+            throw new InvalidValueException("Startdatum darf nicht null/leer sein!");
+        }
+    }
+
+    public java.sql.Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) throws InvalidValueException{
+        if(endDate != null){
+            if(this.beginDate!=null) {
+                if (endDate.after(this.beginDate)) {
+                    this.endDate = endDate;
+                } else {
+                    throw new InvalidValueException("Kursende muss nach Kursbeginn sein!");
+                }
+            }else{
+                this.endDate = endDate;
+            }
+        }else {
+            throw new InvalidValueException("Enddatum darf nicht leer sein!");
+        }
+    }
+
+    public CourseType getCourseType() {
+        return courseType;
+    }
+
+    public void setCourseType(CourseType courseType) throws InvalidValueException{
+        if(courseType != null){
+            this.courseType = courseType;
+        }else {
+            throw new InvalidValueException("Kurstyp darf nicht null/leer sein!");
         }
     }
 
     @Override
     public String toString() {
         return "Course{" +
+                "id=" + this.getId()+ '\'' +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", hours=" + hours +
@@ -38,80 +135,5 @@ public class Course {
                 ", endDate=" + endDate +
                 ", courseType=" + courseType +
                 '}';
-    }
-
-    private long id;
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() throws InvalidValueException {
-        if (description != null && description.length() > 5) {
-            return description;
-        } else {
-            throw new InvalidValueException("Beschreibung muss mindestens 6 Zeichen lang sein");
-        }
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int getHours() throws InvalidValueException {
-        if (hours > 0) {
-            return hours;
-        } else {
-            throw new InvalidValueException("Stundenzahl muss größer als 0 sein");
-        }
-    }
-
-    public void setHours(int hours) {
-        this.hours = hours;
-    }
-
-    public Date getBeginDate() throws InvalidValueException {
-        if (beginDate != null) {
-            return beginDate;
-        } else {
-            throw new InvalidValueException("Beginndatum darf nicht null sein");
-        }
-    }
-
-    public void setBeginDate(Date beginDate) {
-        this.beginDate = beginDate;
-    }
-
-    public Date getEndDate() throws InvalidValueException {
-        if (endDate != null) {
-            return endDate;
-        } else {
-            throw new InvalidValueException("Enddatum darf nicht null sein");
-        }
-    }
-
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
-
-    public CourseType getCourseType() throws InvalidValueException {
-        if (courseType != null) {
-            return courseType;
-        } else {
-            throw new InvalidValueException("Kursetyp darf nicht null sein");
-        }
-    }
-
-    public void setCourseType(CourseType courseType) {
-        this.courseType = courseType;
     }
 }

@@ -7,21 +7,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException, ClassNotFoundException {
         try {
-            // Establish a database connection
-            Connection con = MysqlDatabaseConnection.getConnection("jdbc:mysql://localhost:3306/kurssystem", "root", "");
-            MyCourseRepository repository = new MySqlCourseRepository(con);
-
-            // Start CLI
-            Cli myCli = new Cli(repository);
+            Cli myCli = new Cli(new MySqlCourseRepository());
             myCli.start();
-        } catch (SQLException e) {
-            System.out.println("Datenbankfehler: " + e.getMessage() + " SQL State: " + e.getSQLState());
-        } catch (ClassNotFoundException e) {
+        }
+        catch (SQLException e){
+            System.out.println("Datenbankfehler: " + e.getMessage()+ " SQL State: "+e.getSQLState());
+        }
+        catch (ClassNotFoundException e){
             System.out.println("Datenbankfehler: " + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Unerwarteter Fehler: " + e.getMessage());
+
         }
     }
 }

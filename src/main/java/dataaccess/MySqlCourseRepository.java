@@ -2,144 +2,242 @@
 
     import domain.Course;
     import domain.CourseType;
-    import domain.InvalidValueException;
     import util.Assert;
 
     import java.sql.*;
     import java.util.ArrayList;
+    import java.util.Date;
     import java.util.List;
     import java.util.Optional;
 
-    public class MySqlCourseRepository implements MyCourseRepository {
+    public class MySqlCourseRepository implements MyCourseRepository{
 
         private Connection con;
 
-        public MySqlCourseRepository(Connection con) throws SQLException, ClassNotFoundException {
-            this.con = DriverManager.getConnection("jdbc:mysql://localhost:3306/kurssystem", "root", "");
+        public MySqlCourseRepository() throws SQLException, ClassNotFoundException {
+            this.con = MysqlDatabaseConnection.getConnection("jdbc:mysql://localhost:3306/kurssystem","root","");
+
         }
 
         @Override
-        public List<Course> findAllCoursesByName(String name) {
-            // Implement the logic to find all courses by name
+        public List<Course> findALllCourseByNyme(String name) {
             return List.of();
+        }
+
+        @Override
+        public List<Course> findAllCoursesByDescription(String description) {
+            return List.of();
+        }
+
+        @Override
+        public List<Course> findAllCoursesByNameOrDescription(String searchText) {
+            try{
+                String sql = "SELECT * FROM `courses` WHERE LOWER(`description`) LIKE LOWER(?) OR LOWER(`name`) LIKE LOWER(?)";
+                PreparedStatement preparedStatement = con.prepareStatement(sql);
+                preparedStatement.setString(1, "%"+searchText+"%");
+                preparedStatement.setString(2, "%"+searchText+"%");
+                ResultSet resultSet = preparedStatement.executeQuery();
+                ArrayList<Course> courseList = new ArrayList<>();
+                while(resultSet.next()){
+                    courseList.add(new Course(
+                            resultSet.getLong("id"),
+                            resultSet.getString("name"),
+                            CourseType.valueOf(resultSet.getString("coursetype")),
+                            resultSet.getString("description"),
+                            resultSet.getInt("hours"),
+                            resultSet.getDate("begindate"),
+                            resultSet.getDate("enddate")
+                    ));
+                }
+                return courseList;
+            }catch (SQLException sqlException){
+                throw new DatabaseException(sqlException.getMessage());
+            }
+            //return List.of();
         }
 
         @Override
         public List<Course> findAllCoursesByCourseType(CourseType courseType) {
-            // Implement the logic to find all courses by course type
             return List.of();
         }
 
         @Override
-        public List<Course> findAllCoursesByBeginDate(Date beginDate) {
+        public List<Course> findAllCoursesByStartDate(Date startDate) {
+            return List.of();
+        }
+
+        @Override
+        public List<Course> findAllRunningCourses() {
+            return List.of();
+        }
+
+        @Override
+        public Optional<Course> insert(Course entity) {
+            Assert.notNull(entity);
+
+            try{
+                String sql = "INSERT INTO `courses` (`name`, `description`, `hours`, `beginDate`, `endDate`, `coursetype`) VALUES (?,?,?,?,?,?)";
+                PreparedStatement preparedStatement = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setString(1, entity.getName());
+                preparedStatement.setString(2, entity.getDescription());
+                preparedStatement.setInt(3, entity.getHours());
+                preparedStatement.setDate(4, entity.getBeginDate());
+                preparedStatement.setDate(5, entity.getEndDate());
+                preparedStatement.setString(6, entity.getCourseType().toString());
+
+                int affectedRows = preparedStatement.executeUpdate();
+
+                if(affectedRows==0){
+                    return Optional.empty();
+
+                }
+
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+
+                if(generatedKeys.next()){
+                    return this.getByID(generatedKeys.getLong(1));
+                }
+                else {
+                    return Optional.empty();
+                }
+            }
+
+            catch (SQLException sqlException) {
+                throw new DatabaseException(sqlException.getMessage());
+            }
+        }
+
+        @Override
+        public Optional<Course> getByID(Long id) {
+            Assert.notNull(id);
+            if(countCoursesInDbWithId(id)==0){
+                return Optional.empty();
+            }
+            else{
+                try {
+                    String sql = "SELECT * FROM `courses` WHERE `id` =?";
+                    PreparedStatement preparedStatement = con.prepareStatement(sql);
+                    preparedStatement.setLong(1, id);
+                    ResultSet resultSet = preparedStatement.executeQuery();
+
+                    resultSet.next();
+                    Course coures = new Course(
+                            resultSet.getLong("id"),
+                            resultSet.getString("name"),
+                            CourseType.valueOf(resultSet.getString("coursetype")),
+                            resultSet.getString("description"),
+                            resultSet.getInt("hours"),
+                            resultSet.getDate("begindate"),
+                            resultSet.getDate("enddate")
+
+                    );
+                    return Optional.of(coures);
+                }
+                catch (SQLException sqlException) {
+                    throw new DatabaseException(sqlException.getMessage());
+                }
+
+            }
+
+        }
+
+        private int countCoursesInDbWithId(Long id) {
+            try {
+                String countSql = "SELECT COUNT(*) FROM `courses` WHERE `id` =?";
+                PreparedStatement preparedStatementCount = con.prepareStatement(countSql);
+                preparedStatementCount.setLong(1, id);
+                ResultSet resultSetCount = preparedStatementCount.executeQuery();
+                resultSetCount.next();
+                int courseCount = resultSetCount.getInt(1);
+                return courseCount;
+            }
+            catch (SQLException sqlException) {
+                throw new DatabaseException(sqlException.getMessage());
+            }
+        }
+
+
+
+        @Override
+        public List<Course> getAll() {
             String sql = "SELECT * FROM `courses`";
-            try (PreparedStatement preparedStatement = con.prepareStatement(sql)) {
+            try {
+                PreparedStatement preparedStatement = con.prepareStatement(sql);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 ArrayList<Course> courseList = new ArrayList<>();
                 while (resultSet.next()) {
                     courseList.add(new Course(
                                     resultSet.getLong("id"),
                                     resultSet.getString("name"),
+                                    CourseType.valueOf(resultSet.getString("coursetype")),
                                     resultSet.getString("description"),
                                     resultSet.getInt("hours"),
-                                    resultSet.getDate("begin_date"),
-                                    resultSet.getDate("end_date"),
-                                    CourseType.valueOf(resultSet.getString("course_type"))
+                                    resultSet.getDate("begindate"),
+                                    resultSet.getDate("enddat")
                             )
                     );
+
                 }
                 return courseList;
             } catch (SQLException e) {
-                throw new DatabaseException("Database error occurred");
-            } catch (InvalidValueException e) {
-                throw new RuntimeException(e);
+                throw new DatabaseException("database errror occured");
             }
-        }
-
-        @Override
-        public List<Course> findAllCoursesByEndDate(Date endDate) {
-            // Implement the logic to find all courses by end date
-            return List.of();
-        }
-
-        @Override
-        public List<Course> findAllCoursesByDescription(String description) {
-            // Implement the logic to find all courses by description
-            return List.of();
-        }
-
-        @Override
-        public List<Course> findAllRunningCourses() {
-            // Implement the logic to find all running courses
-            return List.of();
-        }
-
-        @Override
-        public Optional<Course> insert(Course entity) {
-            // Implement the logic to insert a new course
-            return Optional.empty();
+            //return null;
         }
 
         @Override
         public Optional<Course> update(Course entity) {
-            // Implement the logic to update an existing course
-            return Optional.empty();
-        }
 
-        @Override
-        public Optional<Course> getById(Long id) {
-            Assert.notNull(id);
+            Assert.notNull(entity);
 
-            if (countCoursesInDbWithId(id) == 0) {
+            String sql = "UPDATE `courses` SET `name` = ?, `description` = ?, `hours` = ?, `begindate` = ?, `enddate` = ?, `coursetype` = ? WHERE `courses`.`id` = ?";
+            if(countCoursesInDbWithId(entity.getId())==0){
                 return Optional.empty();
-            } else {
-                try {
-                    String sql = "SELECT * FROM courses WHERE id = ?";
+            }
+            else {
+                try{
                     PreparedStatement preparedStatement = con.prepareStatement(sql);
-                    preparedStatement.setLong(1, id);
-                    ResultSet resultSet = preparedStatement.executeQuery();
+                    preparedStatement.setString(1, entity.getName());
+                    preparedStatement.setString(2, entity.getDescription());
+                    preparedStatement.setInt(3, entity.getHours());
+                    preparedStatement.setDate(4, entity.getBeginDate());
+                    preparedStatement.setDate(5, entity.getEndDate());
+                    preparedStatement.setString(6, entity.getCourseType().toString());
+                    preparedStatement.setLong(7, entity.getId());
 
-                    resultSet.next();
-                    Course course = new Course(
-                            resultSet.getLong("id"),
-                            resultSet.getString("name"),
-                            resultSet.getString("description"),
-                            resultSet.getInt("hours"),
-                            resultSet.getDate("begin_date"),
-                            resultSet.getDate("end_date"),
-                            CourseType.valueOf(resultSet.getString("course_type"))
-                    );
-                    return Optional.of(course);
+                    int affectedRows = preparedStatement.executeUpdate();
 
-                } catch (SQLException sqlException) {
+                    if(affectedRows==0){
+                        return Optional.empty();
+                    }
+                    else{
+                        return this.getByID(entity.getId());
+                    }
+                }
+                catch (SQLException sqlException){
                     throw new DatabaseException(sqlException.getMessage());
-                } catch (InvalidValueException e) {
-                    throw new RuntimeException(e);
                 }
             }
-        }
-
-        private int countCoursesInDbWithId(Long id) {
-            String countSql = "SELECT COUNT(*) FROM `courses` WHERE `id` = ?";
-            try (PreparedStatement preparedStatement = con.prepareStatement(countSql)) {
-                preparedStatement.setLong(1, id);
-                try (ResultSet resultSetCount = preparedStatement.executeQuery()) {
-                    resultSetCount.next();
-                    return resultSetCount.getInt(1);
-                }
-            } catch (SQLException e) {
-                throw new DatabaseException("Database error occurred");
-            }
-        }
-
-        @Override
-        public List<Course> getAll() {
-            // Implement the logic to retrieve all courses
-            return List.of();
+            //return Optional.empty();
         }
 
         @Override
         public void deleteById(Long id) {
-            // Implement the logic to delete a course by ID
+            Assert.notNull(id);
+            String sql = "DELETE FROM `courses` WHERE `id`=?";
+            if(countCoursesInDbWithId(id)==1){
+                try {
+                    PreparedStatement preparedStatement = con.prepareStatement(sql);
+                    preparedStatement.setLong(1, id);
+                    preparedStatement.executeUpdate();
+                }
+                catch (SQLException sqlException){
+                    throw new DatabaseException(sqlException.getMessage());
+                }
+            }
+
+
+
+            //throw new IllegalArgumentException("No course with this id exists");
         }
     }
